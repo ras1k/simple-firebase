@@ -1,21 +1,54 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { GoogleAuthProvider, getAuth } from "firebase/auth";
+import React, { useState } from 'react';
+import { GoogleAuthProvider, getAuth, signInWithPopup, signOut } from "firebase/auth";
 import app from '../../firebase/firebase.init';
 
 const Login = () => {
+    const [user, setUser] = useState(null)
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({
         'login_hint': 'user@example.com'
-      });
-      const handleGoogleSignIn = () =>{
-        console.log('lmao')
-      }
+    });
+
+    const handleGoogleSignIn = () => {
+        signInWithPopup(auth, provider)
+            .then(result => {
+                const loggedInUser = result.user;
+                console.log(loggedInUser);
+                setUser(loggedInUser);
+            })
+            .catch(error => {
+                console.log('error', error.message)
+            })
+    }
+    const handleSignOut = () => {
+        signOut(auth)
+            .then(result => {
+                console.log(result);
+                setUser(null);
+            })
+            .catch(error => {
+                console.log(error)
+            })
+    }
     return (
         <div>
-            
-            <button onClick={handleGoogleSignIn}>Google Login</button>
+
+            {
+                user ?
+                    <button onClick={handleSignOut}>Logout</button> :
+                    <button onClick={handleGoogleSignIn}>Google Login</button>
+            }
+
+            {user && <div>
+                <h3>
+                    
+                    User: {user?.displayName}
+                </h3>
+                <p>Email: {user.email}</p>
+                <img src={user?.photoURL} alt="" />
+            </div>
+            }
         </div>
     );
 };
